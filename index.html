@@ -13,6 +13,31 @@
         .tem .iconfont {
             font-size: 50px;
         }
+
+        .weather-enter-active {
+            transition: all 2s;
+        }
+
+        .weather-enter {
+            transform: translateY(200px);
+            opacity: 0;
+        }
+
+        .weather-enter-active:nth-child(2) {
+            transition-delay: 0.2s;
+        }
+
+        .weather-enter-active:nth-child(3) {
+            transition-delay: 0.4s;
+        }
+
+        .weather-enter-active:nth-child(4) {
+            transition-delay: 0.6s;
+        }
+
+        .weather-enter-active:nth-child(5) {
+            transition-delay: 0.8s;
+        }
     </style>
 </head>
 
@@ -21,8 +46,9 @@
         <div class="search_form">
             <div class="logo"><img src="img/logo.png" alt="logo" /></div>
             <div class="form_group">
-                <input type="text" class="input_txt" placeholder="请输入查询的天气" v-model="city" @keydown.enter="search" />
-                <button class="input_sub" @click="search(city)">搜 索</button>
+                <input type="text" class="input_txt" placeholder="请输入查询的天气" v-model="city"
+                    @keydown.enter="search(city)" />
+                <button class="input_sub" @click="search(city)" :class="{loading:flag}">搜 索</button>
             </div>
             <div class="hotkey">
                 <a href="javascript:;" @click="search('北京')">北京</a>
@@ -32,25 +58,27 @@
             </div>
         </div>
         <ul class="weather_list">
-            <li v-for='(item,index) in info'>
-                <div class="info_type">
-                    <span class="iconfont" v-if='item.type.includes("小雨")'>&#xe932;</span>
-                    <span class="iconfont" v-else-if='item.type.includes("雨")'>&#xe931;</span>
-                    <span class="iconfont" v-else-if='item.type.includes("晴")'>&#xe933;</span>
-                    <span class="iconfont" v-else-if='item.type.includes("雨夹雪")'>&#xe934;</span>
-                    <span class="iconfont" v-else-if='item.type.includes("阴")'>&#xe92d;</span>
-                    <span class="iconfont" v-else-if='item.type.includes("风")'>&#xeb8c;</span>
-                    <span class="iconfont" v-else-if='item.type.includes("雪")'>&#xeb87;</span>
-                    <span class="iconfont" v-else-if='item.type.includes("多云")'>&#xeb79;</span>
-                    <span class="iconfont" v-else-if='item.type.includes("雷")'>&#xeb77;</span>
-                    <span class="iconfont" v-else-if='item.type.includes("冰雹")'>&#xeb76;</span>
-                    <span class="iconfont" v-else-if='item.type.includes("雾霾")'>&#xeb75;</span>
-                    <!-- 其他不知道的写晴天 -->
-                    <span class="iconfont" v-else>{{}}</span>
-                </div>
-                <div class="info_temp">高 <b>{{item.high.split(" ")[1]}}</b><br />低 {{item.low.split(" ")[1]}}</div>
-                <div class="info_date"><b>{{city}}</b><span>{{item.date}}</span></div>
-            </li>
+            <transition-group name="weather">
+                <li v-for='(item,index) in info' :key='index'>
+                    <div class="info_type">
+                        <span class="iconfont" v-if='item.type.includes("小雨")'>&#xe932;</span>
+                        <span class="iconfont" v-else-if='item.type.includes("雨")'>&#xe931;</span>
+                        <span class="iconfont" v-else-if='item.type.includes("晴")'>&#xe933;</span>
+                        <span class="iconfont" v-else-if='item.type.includes("雨夹雪")'>&#xe934;</span>
+                        <span class="iconfont" v-else-if='item.type.includes("阴")'>&#xe92d;</span>
+                        <span class="iconfont" v-else-if='item.type.includes("风")'>&#xeb8c;</span>
+                        <span class="iconfont" v-else-if='item.type.includes("雪")'>&#xeb87;</span>
+                        <span class="iconfont" v-else-if='item.type.includes("多云")'>&#xeb79;</span>
+                        <span class="iconfont" v-else-if='item.type.includes("雷")'>&#xeb77;</span>
+                        <span class="iconfont" v-else-if='item.type.includes("冰雹")'>&#xeb76;</span>
+                        <span class="iconfont" v-else-if='item.type.includes("雾霾")'>&#xeb75;</span>
+                        <!-- 其他类别的天气 -->
+                        <span class="iconfont" v-else>{{}}</span>
+                    </div>
+                    <div class="info_temp">高 <b>{{item.high.split(" ")[1]}}</b><br />低 {{item.low.split(" ")[1]}}</div>
+                    <div class="info_date"><b>{{city}}</b><span>{{item.date}}</span></div>
+                </li>
+            </transition-group>
         </ul>
     </div>
 
@@ -79,12 +107,19 @@
         new Vue({
             el: '#app',
             data: {
-                city: '深圳',
-                info: []
+                city: '',
+                info: [],
+                flag: false
             },
             methods: {
                 search(city) {
+                    if (this.city.trim() == '') {
+                        return this.info = []
+                    }
                     this.city = city
+                    this.flag = true
+                    // 在搜索新数据之前把旧数据清空
+                    this.info = []
                     axios({
                         url: 'http://wthrcdn.etouch.cn/weather_mini',
                         method: 'get',
@@ -92,12 +127,9 @@
                     }).then(res => {
                         //成功回调
                         this.info = res.data.data.forecast
+                        this.flag = false
                     });
                 }
-            },
-            created() {
-                // 初始化界面,默认显示深圳天气
-                this.search(this.city)
             }
         })
     </script>
